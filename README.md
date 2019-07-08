@@ -21,13 +21,25 @@ After having accumulated a few days worth of song data, you can also use the sam
 
 (At the moment I have not implemented a command line interface to the program, so users have to write their own Python code using my methods if they want to analyze anything.)
 
-### Results
+### Numerical Results
 
 I observed the songs played by KLOVE and Air1 over the course of about 10 days to get a decent dataset of songs (around 3500 for each station). Here is what I found:
 
 - KLOVE and Air1 play almost the exact same amount of songs per unit time. TODO
 - KLOVE has a larger music collection (the station plays more distinct songs). TODO
 - Of the top 40 songs most frequently played at each station, only 7 songs were common to both lists. This means that the songs that the two stations choose to play most frequently are different. You would think that there would be much more overlap between these lists, because the stations would ideally play the newest, most popular songs among people who listen to Contemporary Christian Music (CCM). Surprisingly, their most frequent plays are almost entirely different. This might mean that Christian radio stations play music that is not representative of the  tastes of the CCM audience. (Who knew, right?!)
+
+### Graphical Results
+
+Here is a graph of the times where the song "Symphony" by the artist "Switch" was played on Air1:
+
+![](results/Symphony Play Times (Air1).png)
+
+As you can see, Air1 *loves* to play this song, to my pain. This graph confirms my theory that Air1 plays this song way too much. It's not that I'm choosing the wrong times to listen to the station (or that I'm plain crazy), but that Air1 has a problem.
+
+There are a few points on the graph where the song is "played" almost back-to-back. These are errors in my song-stitching algorithm. Sometimes when the script checks the Air1 recently-added page, it adds a duplicate song. However, these errors are easy to spot.
+
+
 
 ### Project Structure
 

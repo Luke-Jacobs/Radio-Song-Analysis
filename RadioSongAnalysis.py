@@ -24,7 +24,13 @@ def getCommandLineArguments():
     return ap.parse_args()
 
 
+def temp():
+    c = StationPlayCollection.getMostRecentSaved()
+    c['KLOVE'].showFrequencyBoxAndWhisker()
+
 if __name__ == '__main__':
+    # temp()
+
     # Arguments
     args = getCommandLineArguments()
 

@@ -1,6 +1,6 @@
 import pickle
 import time
-from typing import List, Tuple
+from typing import List, Tuple, Union
 from datetime import datetime, timedelta
 from matplotlib import pyplot as plt
 from collections import Counter
@@ -121,7 +121,7 @@ class SongList:
             adjustedPts = []
             points = Counter([datetime.fromtimestamp(timestamp).hour for timestamp in timestamps])
             for hour in range(24):
-                adjustedPts.append(points[hour] / len(self.select(hour=hour)))  # Adjust for lack of coverage for some hours
+                adjustedPts.append(points[hour] / len(self.select(hours=hour)))  # Adjust for lack of coverage for some hours
 
             plt.bar(range(24), adjustedPts)
             plt.xlabel('Hour')
@@ -151,6 +151,91 @@ class SongList:
         intervals.append(currentInterval)
 
         return intervals
+
+    def showFrequencyGraph(self, title: str = None, xMax: int = None, yMax: int = None, show=True):
+        """Graph frequency vs. song popularity for this song list."""
+        songsByPopularity = self.getPopularityIndices()
+        yVals = sorted([item[1]*self.n for item in songsByPopularity], reverse=True)
+        xVals = range(1, len(self.getUniqueSongs()) + 1)
+
+        if show:
+            if xMax: plt.xlim(1, xMax)
+            if yMax: plt.ylim(1, yMax)
+            plt.plot(xVals, yVals)
+            if title is None: title = 'Frequency graph of each song played in this list sorted by popularity'
+            title += ' (n = %d)' % len(xVals)
+            plt.title(title)
+            plt.ylabel('Number of plays')
+            plt.xlabel('Songs sorted by most popular to least popular')
+            plt.show()
+
+        return xVals, yVals
+
+    def compareSongFrequenciesWith(self, title: str, stationNames: List[str], other: 'SongList',
+                                   xMax: int = None, yMax: int = None):
+        plt.ylabel('Number of plays')
+        if yMax: plt.ylim(1, yMax)
+        plt.xlabel('Songs sorted by most popular to least popular')
+        if xMax: plt.xlim(1, xMax)
+        plt.title(title)
+        plt.plot(*self.showFrequencyGraph(show=False), color='blue')
+        plt.plot(*other.showFrequencyGraph(show=False), color='red')
+
+        plt.legend(stationNames)
+        ax = plt.gca()
+        leg = ax.get_legend()
+        leg.legendHandles[0].set_color('blue')
+        leg.legendHandles[1].set_color('red')
+
+        plt.show()
+
+    @staticmethod
+    def _showBoxAndWhisker(fiveNumberSummary: List[float], xlabel: str = None, ylabel: str = None):
+        """Show a box-and-whisker plot using pyplot"""
+
+        minVal, firstQ, median, thirdQ, maxVal = fiveNumberSummary
+
+        plt.xlim(1, maxVal + 10)
+        plt.ylim(0, 5)
+
+        plt.vlines([firstQ, thirdQ], 2, 3, colors='b', lw=4)
+        plt.vlines(median, 2, 3, lw=4, linestyles='dashed', colors='b')
+
+        plt.hlines([2, 3], firstQ, thirdQ, colors='b', lw=4)
+        plt.hlines(2.5, minVal, firstQ, colors='b', lw=4)
+        plt.hlines(2.5, thirdQ, maxVal, colors='b', lw=4)
+
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+
+        plt.show()
+
+    def showFrequencyBoxAndWhisker(self, show=True):
+        songsByPopularity = self.getPopularityIndices()
+        vals = sorted([item[1] * self.n for item in songsByPopularity], reverse=False)
+        nVals = len(vals)
+        firstQ = vals[nVals // 4]
+        median = vals[nVals // 2]
+        thirdQ = vals[3 * (nVals // 4)]
+        maxVal = vals[-1]
+        minVal = vals[0]
+
+        if show:
+            print('Five number summary: %d %d %d %d %d' % (minVal, firstQ, median, thirdQ, maxVal))
+
+            plt.xlim(1, maxVal + 10)
+            plt.ylim(0, 5)
+
+            plt.vlines([firstQ, thirdQ], 2, 3, colors='b', lw=4)
+            plt.vlines(median, 2, 3, lw=4, linestyles='dashed', colors='b')
+
+            plt.hlines([2, 3], firstQ, thirdQ, colors='b', lw=4)
+            plt.hlines(2.5, minVal, firstQ, colors='b', lw=4)
+            plt.hlines(2.5, thirdQ, maxVal, colors='b', lw=4)
+
+            plt.show()
+
+        return minVal, firstQ, median, thirdQ, maxVal
 
     @staticmethod
     def _timeElapsedAcrossIntervals(intervals: List[List[int]]) -> int:
@@ -246,11 +331,13 @@ class SongList:
         ints = self.getCaptureIntervals()
         return self._timeElapsedAcrossIntervals(ints)
 
-    def select(self, title: str=None, artist: str=None, hour: int=None):
+    def select(self, title: str=None, artist: str=None, hours: Union[int, List[int]]=None):
+        if type(hours) == int:
+            hours = [hours]
         return SongList([song for song in self.songs if
                 (title is None or title == song.title) and
                 (artist is None or artist == song.artist) and
-                (hour is None or hour == datetime.fromtimestamp(song.timestamp).hour)])
+                (hours is None or datetime.fromtimestamp(song.timestamp).hour in hours)])
 
     def getUniqueSongs(self) -> List[PlayedSong]:
         return list(set(self.songs))
