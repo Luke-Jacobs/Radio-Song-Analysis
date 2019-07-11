@@ -15,10 +15,12 @@ def getCommandLineArguments():
     collectParser = subparsers.add_parser('collect', help='Collect data over time')
     collectParser.add_argument('-i', '--input', type=str, required=False, default='new',
                     help='The timestamp of the collection to load. Use \'newest\' to load the most recently saved collection.')
-    collectParser.add_argument('-w', '--wait', type=float, default=3.5, required=False,
+    collectParser.add_argument('-w', '--wait', type=float, default=4, required=False,
                     help='The wait time to fetch the recent songs list.')
-    collectParser.add_argument('-o', '--output', type=str, required=False, default=None,
-                    help='Redirect the program\'s output to a file')
+    collectParser.add_argument('-l', '--logDir', type=str, required=False, default=None,
+                    help='Redirect the program\'s log to a file')
+    collectParser.add_argument('-o', '--outputDir', type=str, required=False, default='data',
+                    help='The folder to write the log files to')
     collectParser.add_argument('-b', '--background', action='store_true',
                     help='Move the process into the background')
     return ap.parse_args()
@@ -27,6 +29,7 @@ def getCommandLineArguments():
 def temp():
     c = StationPlayCollection.getMostRecentSaved()
     c['KLOVE'].showFrequencyBoxAndWhisker()
+
 
 if __name__ == '__main__':
     # temp()
@@ -67,16 +70,14 @@ if __name__ == '__main__':
             if os.fork():
                 sys.exit()
 
-        if args.output:
-            print('[i] Redirecting program output to %s' % args.output)
-            sys.stdout = open(args.output, 'w+', 1)
+        if args.logDir:
+            print('[i] Redirecting program output to %s' % args.logDir)
+            sys.stdout = open(args.logDir, 'w+', 1)
 
         # Start collecting
-        collectSongsFromStations(COLLECTION, wait=args.wait)
+        collectSongsFromStations(COLLECTION, wait=args.wait*60, folder=args.outputDir)
 
     # Handle showing
     elif args.command == 'show':
         print(args)
-
-
 

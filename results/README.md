@@ -1,6 +1,6 @@
 # Results
 
-### Most Important
+### Summary
 - KLOVE and Air1 play almost the **exact same amount of songs per unit time**.
   - Air1: 2993
   - KLOVE: 3016
@@ -17,7 +17,13 @@
 
 ### Graphs
 
-Another feature of my script is that it can show a line graph of the popularity curve of songs. Here are Air1 and KLOVE's popularity curves compared:
+Here is a graph that shows the intervals when my computer captured the songs that the two stations played:
+
+![](../graphs/Most Recent Capture Intervals.png)
+
+You can see that I capture data from all times of day and across many days. This shows that I have taken a sizeable sample, and thus I can make some inferences about the data.
+
+The most helpful feature of my script is that it can show a line graph of the popularity curve of songs. Here are Air1 and KLOVE's popularity curves compared:
 
 ![](../graphs/KLOVE and Air1 Comparison Frequency Graph.png)
 
@@ -25,8 +31,6 @@ We can see that the stations follow a very similar pattern, albeit with a few di
 
 - KLOVE's popularity curve tail is longer than Air1's, meaning that they choose from a greater set of songs.
 - Air1 has a higher maximum than KLOVE, meaning that they play their top  ~10 songs much more than KLOVE. (About 32% more!)
-
-
 
 This graph shows the times when the song "Symphony" by "Switch" was played on KLOVE:
 
@@ -44,3 +48,4 @@ The first thought that came into my head when I saw this was: *Are you kidding m
 
 - Listen to Air1 if you do not know any popular CCM songs and want to listen to some quick. If you are a regular KLOVE listener, you might hear some new songs not played on KLOVE.
 - Listen to KLOVE if you want to listen to a greater CCM music collection and want to listen to more unpopular, older songs. If you are a regular Air1 listener, you might hear some new songs not played on Air1.
+- Both radio stations need to step up their game. There are too many good Christian artists that are being overlooked in favor of mainstream garbage. Just because you can get away with playing the same few songs over and over again does not mean that it is ok! Christian radio needs to branch out into more genres and play more unique songs. Until then, the sterotypes around Christian radio will remain true.

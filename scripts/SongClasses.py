@@ -149,13 +149,18 @@ class SongList:
                 intervals.append(currentInterval)
                 currentInterval = []
         intervals.append(currentInterval)
+        intervals = [inv for inv in intervals if inv]
 
         return intervals
 
-    def showFrequencyGraph(self, title: str = None, xMax: int = None, yMax: int = None, show=True):
+    def showFrequencyGraph(self, title: str = None, xMax: int = None, yMax: int = None, show=True, absolute=False):
         """Graph frequency vs. song popularity for this song list."""
         songsByPopularity = self.getPopularityIndices()
-        yVals = sorted([item[1]*self.n for item in songsByPopularity], reverse=True)
+        if absolute:
+            scale = self.n
+        else:
+            scale = 1
+        yVals = sorted([item[1]*scale for item in songsByPopularity], reverse=True)
         xVals = range(1, len(self.getUniqueSongs()) + 1)
 
         if show:
@@ -171,21 +176,32 @@ class SongList:
 
         return xVals, yVals
 
-    def compareSongFrequenciesWith(self, title: str, stationNames: List[str], other: 'SongList',
-                                   xMax: int = None, yMax: int = None):
+    @staticmethod
+    def compareSongFrequencies(stationNames: List[str], *songLists: 'SongList',
+                               xMax: int = None, yMax: int = None, title: str = None):
+        if len(songLists) > 4:
+            raise RuntimeError('Cannot compare this list to more than 4 other song lists')
+        if len(songLists) < 2:
+            raise RuntimeError('Need at least 2 song lists to compare their frequencies')
+
         plt.ylabel('Number of plays')
         if yMax: plt.ylim(1, yMax)
         plt.xlabel('Songs sorted by most popular to least popular')
         if xMax: plt.xlim(1, xMax)
-        plt.title(title)
-        plt.plot(*self.showFrequencyGraph(show=False), color='blue')
-        plt.plot(*other.showFrequencyGraph(show=False), color='red')
+        if title: plt.title(title)
 
+        # Graph lines on same axes
+        colors = ['r', 'g', 'b', 'y']
+        i = 0
+        for i, otherList in enumerate(songLists):
+            plt.plot(*otherList.showFrequencyGraph(show=False), color=colors[i])
+
+        # Setup legend with matching colors
         plt.legend(stationNames)
         ax = plt.gca()
         leg = ax.get_legend()
-        leg.legendHandles[0].set_color('blue')
-        leg.legendHandles[1].set_color('red')
+        for j in range(i):
+            leg.legendHandles[j].set_color(colors[j])
 
         plt.show()
 

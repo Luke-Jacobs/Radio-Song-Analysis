@@ -1,5 +1,5 @@
 from scripts.StationInterfaces import *
-from typing import List, Union, Dict
+from typing import List, Dict, Optional
 import os, time
 
 """
@@ -20,7 +20,7 @@ class StationPlayCollection:
         for stationName in state['stationData']:
             self.songLists[stationName] = SongList(state['stationData'][stationName])
 
-    def __getitem__(self, item) -> SongList:
+    def __getitem__(self, item: str) -> SongList:
         return self.songLists[item]
 
     def __setitem__(self, key: str, value: SongList):
@@ -34,15 +34,18 @@ class StationPlayCollection:
 
         # Add to collection if not first addition
         else:
-            lastFewSongs = self.songLists[stationName].songs[-6:]
+            lastFewSongs = self.songLists[stationName].songs[-11:]
             newSongs = getNewSongs(lastFewSongs, songs)
             print('[%s] Adding %d new song%s' % (stationName, len(newSongs), '' if len(newSongs) == 1 else 's'))
             self.songLists[stationName].add(newSongs)
 
-    def save(self, timestamp: Union[None, int]=None):
+    def save(self, timestamp: Optional[int]=None, folder: Optional[str]=None):
+        if folder is None:
+            folder = 'data'
+        os.makedirs(folder, exist_ok=True)
         if timestamp is None:
             timestamp = int(time.time())
-        with open('data/%d' % timestamp, 'wb+') as fp:
+        with open(os.path.join(folder, str(timestamp)), 'wb+') as fp:
             pickle.dump(self, fp)
 
     def getStations(self) -> List[str]:
@@ -51,9 +54,15 @@ class StationPlayCollection:
     def getAllSongs(self) -> SongList:
         return SongList([song for songList in self.songLists.values() for song in songList.songs])
 
+    def getLists(self) -> Dict[str, SongList]:
+        return self.songLists
+
+    def compareAllFrequencies(self, title: str = None):
+        SongList.compareSongFrequencies(list(self.songLists.keys()), *self.songLists.values(), title=title)
+
     @staticmethod
-    def restore(timestamp: int):
-        filepath = 'data/%d' % timestamp
+    def restore(timestamp: int, folder: str = 'data'):
+        filepath = os.path.join(folder, str(timestamp))
         if not os.path.exists(filepath):
             raise RuntimeError('Collection does not exist')
         with open(filepath, 'rb') as fp:
@@ -100,7 +109,7 @@ class RadioAnalysis:
         avgPopularityByHour = []
         allHours = list(range(24))
         for hour in allHours:
-            songsAtHour = allSongs.select(hour=hour)
+            songsAtHour = allSongs.select(hours=hour)
             nSongsAtHour = len(songsAtHour)
             hourlyPopularityTotal = sum([popularityIndex[song] for song in songsAtHour.songs]) / nSongsAtHour
             avgPopularityByHour.append(hourlyPopularityTotal)
@@ -112,23 +121,26 @@ class RadioAnalysis:
         plt.show()
 
 
-def getNewSongs(laterSongs: List[PlayedSong], earlierSongs: List[PlayedSong]) -> Union[None, List[PlayedSong]]:
+def getNewSongs(laterSongs: List[PlayedSong], earlierSongs: List[PlayedSong]) -> Optional[List[PlayedSong]]:
     """Combine two PlayedSong lists while respecting the older timestamp values in the laterSongs list."""
 
     # Get overlapping section
     overlap = set(laterSongs).intersection(set(earlierSongs))
-    if overlap != set(earlierSongs[-len(overlap):]):
-        print('[-] Error in stitching! Overlap: %s Later: %s Earlier: %s' %
-              (PlayedSong.showList(overlap), PlayedSong.showList(laterSongs), PlayedSong.showList(earlierSongs)))
 
     if not overlap:
         print('[-] No overlap between songs!')
+    addition = earlierSongs.copy()
     for item in overlap:
-        earlierSongs.remove(item)
-    return earlierSongs
+        addition.remove(item)
+
+    if overlap != set(earlierSongs[-len(overlap):]):
+        print('[-] Error in stitching! \n\tOverlap: %s \n\tLater: %s \n\tEarlier: %s \n\tAdding: %s' %
+              (PlayedSong.showList(overlap), PlayedSong.showList(laterSongs), PlayedSong.showList(earlierSongs), PlayedSong.showList(addition)))
+
+    return addition
 
 
-def collectSongsFromStations(collection: StationPlayCollection, wait: float=5*60):
+def collectSongsFromStations(collection: StationPlayCollection, wait: float=5*60, folder: str=None):
     """This function continuously checks the websites of Air1 and K-LOVE for new songs."""
 
     while True:
@@ -137,12 +149,13 @@ def collectSongsFromStations(collection: StationPlayCollection, wait: float=5*60
             # Add more stations here <---
             writeSongsToCollectionAIR1(collection)
             writeSongsToCollectionKLOVE(collection)
+            writeSongsToCollectionKISS(collection)
             print('[i] Waiting %d minutes' % (wait / 60))
             time.sleep(wait)
 
         # Every two additions, save collection
         collection.showStats()
         print('[i] Saving collection (%s)...' % (datetime.now().strftime("%I:%M")), end='')
-        collection.save()
+        collection.save(folder=folder)
         print('saved!')
 
